@@ -65,7 +65,7 @@ I believe in **learning by building**, and my projects reflect my passion for te
 
 ## 🌐 Connect With Me
 
-[![LinkedIn](https://img.shields.io/badge/-LinkedIn-0077B5?logo=linkedin&logoColor=white)](https://linkedin.com/)  
+[![LinkedIn](https://img.shields.io/badge/-LinkedIn-0077B5?logo=linkedin&logoColor=white)]([https://linkedin.com/](https://www.linkedin.com/in/sumith-u-141b85317))  
 [![Gmail](https://img.shields.io/badge/-Gmail-D14836?logo=gmail&logoColor=white)](mailto:sumithsumith4567890@gmail.com)  
 
 ---
