@@ -83,21 +83,6 @@ A full-stack gym management solution with modern UI.
 
 ---
 
-### 10. 🔌 Offline Error Webpage
-- A modern, responsive offline webpage with a black and yellow theme designed for GymTrack Lite.
-
----
-
-### 11. 🎨 App Icon Design
-- Designed an app icon featuring a **yellow dumbbell on a black background** for the GymTrack Lite web APK.
-
----
-
-### 12. ✨ Lighting Animation
-- Created a **Lottie JSON animation** with glowing edges around the app logo for enhanced visual appeal.
-
----
-
 ## 🚧 Ongoing / Planned Projects
 
 ### 🔍 ATS Resume Checker Bot (Web App)
@@ -132,9 +117,7 @@ A full-stack gym management solution with modern UI.
 ---
 
 ## 🔗 Contact Me
-- 📧 Email: [Your Email]
-- 🌐 Portfolio: [Your Website] *(optional)*
-- 💼 LinkedIn: [Your LinkedIn] *(optional)*
+
 
 ---
 
