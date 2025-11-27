@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Receiver — WS</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: system-ui, Arial; padding:18px; max-width:900px; margin:auto; }
+    input { width:100%; padding:10px; margin:8px 0; box-sizing:border-box; }
+    button { padding:10px 14px; }
+    #messages { margin-top:12px; max-height:480px; overflow:auto; }
+    .msg { padding:10px; border-radius:8px; margin-bottom:8px; background:#eef; }
+    .meta { font-size:12px; color:#555; }
+  </style>
+</head>
+<body>
+  <h2>Receiver</h2>
+  <label>WebSocket URL</label>
+  <input id="wsUrl" value="ws://localhost:4000" />
+  <div style="margin:8px 0;">
+    <button id="connectBtn">Connect</button>
+    <button id="disconnectBtn" disabled>Disconnect</button>
+  </div>
+
+  <div id="messages"></div>
+
+<script>
+  const wsUrlEl = document.getElementById('wsUrl');
+  const connectBtn = document.getElementById('connectBtn');
+  const disconnectBtn = document.getElementById('disconnectBtn');
+  const messagesEl = document.getElementById('messages');
+  let ws = null;
+  let clientId = null;
+
+  function show(obj) {
+    const el = document.createElement('div');
+    el.className = 'msg';
+    const time = new Date(obj.timestamp || Date.now()).toLocaleString();
+    el.innerHTML = `<div class="meta"><strong>${obj.from || 'unknown'}</strong> · ${time}</div><div>${obj.message || obj.data || JSON.stringify(obj)}</div>`;
+    messagesEl.appendChild(el);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  connectBtn.onclick = () => {
+    if (ws) return;
+    const url = wsUrlEl.value;
+    ws = new WebSocket(url);
+    ws.onopen = () => {
+      console.log('connected');
+      connectBtn.disabled = true;
+      disconnectBtn.disabled = false;
+    };
+    ws.onmessage = (e) => {
+      try {
+        const p = JSON.parse(e.data);
+        if (p.type === 'welcome' && p.clientId) {
+          clientId = p.clientId;
+          const el = document.createElement('div');
+          el.className = 'msg';
+          el.innerHTML = `<div class="meta">Connected as <strong>${clientId}</strong></div>`;
+          messagesEl.appendChild(el);
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+        } else {
+          show(p);
+        }
+      } catch (err) {
+        show({ from: 'server', message: e.data });
+      }
+    };
+    ws.onclose = () => {
+      ws = null;
+      connectBtn.disabled = false;
+      disconnectBtn.disabled = true;
+      const el = document.createElement('div');
+      el.className = 'msg';
+      el.innerHTML = '<div class="meta">Disconnected</div>';
+      messagesEl.appendChild(el);
+    };
+    ws.onerror = (err) => {
+      console.error('ws error', err);
+    };
+  };
+
+  disconnectBtn.onclick = () => { if (ws) ws.close(); };
+</script>
+</body>
+</html>

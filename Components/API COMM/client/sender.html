@@ -1,0 +1,124 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Sender — WS + HTTP</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: system-ui, Arial; padding: 18px; max-width:700px; margin:auto; }
+    input, textarea { width:100%; padding:10px; margin:8px 0; box-sizing:border-box; font-size:14px; }
+    button { padding:10px 14px; margin-right:8px; }
+    .log { background:#111; color:#fff; padding:12px; border-radius:8px; height:220px; overflow:auto; }
+    header { display:flex; gap:12px; align-items:center; margin-bottom:12px; }
+    .pill { background:#f3f4f6; border-radius:999px; padding:6px 10px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>Sender</h2>
+    <div class="pill">No DB · WebSocket + HTTP</div>
+  </header>
+
+  <label>WebSocket URL</label>
+  <input id="wsUrl" value="ws://localhost:4000" />
+
+  <label>HTTP Broadcast URL</label>
+  <input id="httpUrl" value="http://localhost:4000/broadcast" />
+
+  <label>Message</label>
+  <textarea id="message" rows="4" placeholder="Type a message..."></textarea>
+
+  <div style="margin:10px 0;">
+    <button id="connectBtn">Connect WS</button>
+    <button id="sendWsBtn" disabled>Send via WS</button>
+    <button id="sendHttpBtn">Send via HTTP POST</button>
+    <button id="disconnectBtn" disabled>Disconnect</button>
+  </div>
+
+  <h3>Log</h3>
+  <div class="log" id="log"></div>
+
+<script>
+  const wsUrlEl = document.getElementById('wsUrl');
+  const httpUrlEl = document.getElementById('httpUrl');
+  const msgEl = document.getElementById('message');
+  const connectBtn = document.getElementById('connectBtn');
+  const sendWsBtn = document.getElementById('sendWsBtn');
+  const sendHttpBtn = document.getElementById('sendHttpBtn');
+  const disconnectBtn = document.getElementById('disconnectBtn');
+  const logEl = document.getElementById('log');
+
+  let ws = null;
+  let clientId = null;
+
+  function log(...args) {
+    const d = document.createElement('div');
+    d.textContent = args.map(a => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' ');
+    logEl.appendChild(d);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  connectBtn.onclick = () => {
+    if (ws) return;
+    const url = wsUrlEl.value;
+    ws = new WebSocket(url);
+    ws.onopen = () => {
+      log('WS connected to', url);
+      connectBtn.disabled = true;
+      sendWsBtn.disabled = false;
+      disconnectBtn.disabled = false;
+    };
+    ws.onmessage = (e) => {
+      try {
+        const p = JSON.parse(e.data);
+        log('WS message:', p);
+        if (p.type === 'welcome' && p.clientId) {
+          clientId = p.clientId;
+          log('Assigned clientId:', clientId);
+        }
+      } catch (err) {
+        log('WS raw:', e.data);
+      }
+    };
+    ws.onclose = () => {
+      log('WS disconnected');
+      ws = null;
+      sendWsBtn.disabled = true;
+      disconnectBtn.disabled = true;
+      connectBtn.disabled = false;
+    };
+    ws.onerror = (err) => log('WS error', err);
+  };
+
+  sendWsBtn.onclick = () => {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return alert('WebSocket not connected');
+    const payload = { type: "message", from: clientId || "sender", timestamp: Date.now(), message: msgEl.value };
+    ws.send(JSON.stringify(payload));
+    log('Sent WS:', payload);
+    msgEl.value = '';
+  };
+
+  sendHttpBtn.onclick = async () => {
+    const url = httpUrlEl.value;
+    const payload = { type: "http-message", from: clientId || "sender", timestamp: Date.now(), message: msgEl.value };
+    try {
+      const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const json = await res.json();
+      log('HTTP POST response:', json);
+      msgEl.value = '';
+    } catch (err) {
+      log('HTTP error', err);
+    }
+  };
+
+  disconnectBtn.onclick = () => { if (ws) ws.close(); };
+
+  // quick helper: allow Enter+Ctrl to send via WS
+  msgEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      sendWsBtn.click();
+    }
+  });
+</script>
+</body>
+</html>
